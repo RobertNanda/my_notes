@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Visual Learning Hub — Step-by-Step Concepts &amp; Papers</title>
+  <meta name="description" content="Interactive, visual-first AI learning portal breaking down machine learning concepts and landmark research papers step by step." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="container">
+      <a href="index.html" class="nav-brand">
+        <span class="nav-brand-icon">🧠</span>
+        <span>AI Visual Learning Hub</span>
+      </a>
+      <nav aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="#topics-section" class="active">Topics</a></li>
+          <li><a href="#papers-section">Papers</a></li>
+          <li><a href="PLAN.md">Master Plan</a></li>
+          <li><a href="https://github.com/RobertNanda/my_notes" target="_blank" rel="noopener">GitHub Repo ↗</a></li>
+        </ul>
+      </nav>
+      <button id="theme-toggle" class="theme-toggle-btn" type="button" aria-label="Toggle color theme">
+        <span aria-hidden="true">☀️</span> <span>Light Mode</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container">
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-badge">✨ Interactive AI &amp; Deep Learning Notes</div>
+      <h1 class="hero-title">
+        AI Visual Learning Hub — <span class="gradient-text">Step-by-Step Concepts &amp; Papers</span>
+      </h1>
+      <p class="hero-subtitle">
+        Every AI topic and research paper deconstructed into intuitive mental models, interactive matrix animations, color-coded toy math, and clean PyTorch code.
+      </p>
+
+      <!-- 5-Step Visual Framework Strip -->
+      <div class="framework-strip" aria-label="The 5-Step Visual Framework">
+        <div class="framework-step-card">
+          <div class="framework-step-num">1</div>
+          <div class="framework-step-title">💡 Intuition</div>
+          <p class="framework-step-desc">Plain-English mental models &amp; real-world analogies before any jargon.</p>
+        </div>
+        <div class="framework-step-card">
+          <div class="framework-step-num">2</div>
+          <div class="framework-step-title">🎮 Interactive Viz</div>
+          <p class="framework-step-desc">Step-by-step animations, sliders, and live attention &amp; tensor explorers.</p>
+        </div>
+        <div class="framework-step-card">
+          <div class="framework-step-num">3</div>
+          <div class="framework-step-title">🏗️ Architecture</div>
+          <p class="framework-step-desc">Visual system diagrams breaking complex architectures into simple blocks.</p>
+        </div>
+        <div class="framework-step-card">
+          <div class="framework-step-num">4</div>
+          <div class="framework-step-title">🎨 Color-Coded Toy Math</div>
+          <p class="framework-step-desc">Equations mapped to <span class="pill-q">Q</span> <span class="pill-k">K</span> <span class="pill-v">V</span> colors and worked out with $2\times 2$ toy numbers.</p>
+        </div>
+        <div class="framework-step-card">
+          <div class="framework-step-num">5</div>
+          <div class="framework-step-title">💻 Minimal Code</div>
+          <p class="framework-step-desc">Clean, line-by-line commented PyTorch code &amp; active-recall flashcards.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Live Learning Progress Bar -->
+    <section class="progress-card" aria-label="Learning Progress">
+      <div class="progress-info">
+        <div class="progress-title">📈 Your Learning Progress</div>
+        <div id="progress-text" class="progress-text">0 of 1 active module completed (0%)</div>
+      </div>
+      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </section>
+
+    <!-- Search and Filter Controls -->
+    <section class="controls-bar" aria-label="Catalog Search and Filters">
+      <div class="search-wrapper">
+        <input
+          type="search"
+          id="search-input"
+          class="search-input"
+          placeholder="🔍 Search topics, papers, concepts (e.g., Self-Attention, Query, Key, Value, Transformer)..."
+          aria-label="Search topics and papers"
+        />
+      </div>
+      <div class="filter-tabs" role="tablist" aria-label="Filter by category">
+        <button type="button" class="filter-btn active" data-filter="all">All</button>
+        <button type="button" class="filter-btn" data-filter="topics">Topics</button>
+        <button type="button" class="filter-btn" data-filter="papers">Papers</button>
+      </div>
+    </section>
+
+    <!-- Core AI Topics Section -->
+    <section id="topics-section" data-section-group="topics">
+      <div class="section-heading">
+        <h2>🧠 Interactive Concept Modules (Topics)</h2>
+      </div>
+
+      <div class="grid-cards">
+        <!-- Topic #1: Self-Attention -->
+        <article
+          class="card"
+          data-category="topics"
+          data-keywords="self-attention queries keys values q k v softmax transformers scaled dot product attention"
+        >
+          <div>
+            <div class="card-top-row">
+              <span class="card-badge">Foundations • Transformers</span>
+              <span class="pill-score">Topic #1</span>
+            </div>
+            <h3 class="card-title">Self-Attention (Queries, Keys &amp; Values)</h3>
+            <p class="card-desc">
+              Understand how words dynamically route information to one another. Walk through <span class="q-color">Query (Q)</span>, <span class="k-color">Key (K)</span>, and <span class="v-color">Value (V)</span> vectors with a live interactive attention heatmap, a 5-stage visual stepper, worked $2\times 2$ toy matrix math, and clean PyTorch code.
+            </p>
+          </div>
+
+          <div>
+            <div class="card-meta">
+              <span>🟢 Difficulty: <strong>Beginner-Friendly</strong></span>
+              <span>⏱️ ~12 min interactive read</span>
+              <span>🔢 Worked 3-Token Toy Math</span>
+            </div>
+            <div class="card-actions">
+              <a href="topics/self-attention/index.html" class="btn btn-primary">
+                🎮 Interactive Visual Lesson
+              </a>
+              <a href="topics/self-attention/notes.md" class="btn btn-secondary">
+                📖 GitHub Markdown Notes
+              </a>
+              <button
+                type="button"
+                class="complete-toggle-btn"
+                data-complete-id="topic-self-attention"
+              >
+                ⬜ Mark Complete
+              </button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Research Papers Breakdown Section -->
+    <section id="papers-section" data-section-group="papers">
+      <div class="section-heading">
+        <h2>📄 Landmark Research Paper Breakdowns</h2>
+      </div>
+
+      <div class="grid-cards">
+        <!-- Placeholder Paper #1: Attention Is All You Need -->
+        <article
+          class="card"
+          data-category="papers"
+          data-keywords="attention is all you need vaswani 2017 transformer multi-head positional encoding paper"
+        >
+          <div>
+            <div class="card-top-row">
+              <span class="card-badge badge-paper">Landmark Paper • NeurIPS 2017</span>
+              <span class="pill-k">Ready to Unlock</span>
+            </div>
+            <h3 class="card-title">Attention Is All You Need (Vaswani et al., 2017)</h3>
+            <p class="card-desc">
+              Upcoming visual breakdown of the full Transformer architecture: Multi-Head Attention, Positional Encodings, Residual Connections, Feed-Forward Networks, and Encoder-Decoder masking explained block by block.
+            </p>
+          </div>
+
+          <div>
+            <div class="card-meta">
+              <span>🟡 Difficulty: <strong>Intermediate</strong></span>
+              <span>🏛️ Architecture Explorer</span>
+              <span>💬 Request in chat to unlock</span>
+            </div>
+            <div class="card-actions">
+              <a href="topics/self-attention/index.html" class="btn btn-secondary">
+                🔗 Prerequisite: Self-Attention
+              </a>
+              <a href="PLAN.md" class="btn btn-secondary">
+                📋 View Paper Template
+              </a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        Built for intuitive, visual-first AI mastery •
+        <a href="PLAN.md">Master Learning Plan</a> •
+        <a href="topics/self-attention/index.html">Topic #1: Self-Attention</a> •
+        <a href="https://github.com/RobertNanda/my_notes" target="_blank" rel="noopener">GitHub Repository</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="assets/js/core.js"></script>
+</body>
+</html>

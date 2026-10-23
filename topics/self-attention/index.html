@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Topic #1: Self-Attention (Q, K, V & Scaled Dot-Product) — Interactive Visual Guide</title>
+
+  <!-- Shared stylesheet (with complete self-contained fallback below) -->
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+
+  <!-- KaTeX for Crisp Math Rendering -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Mermaid.js for Architecture Diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-card: #111827;
+      --bg-card-alt: #1e293b;
+      --bg-glass: rgba(17, 24, 39, 0.85);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-subtle: #1e293b;
+      --border-focus: #334155;
+      --color-q: #38bdf8;
+      --color-q-bg: rgba(56, 189, 248, 0.14);
+      --color-k: #fbbf24;
+      --color-k-bg: rgba(251, 191, 36, 0.14);
+      --color-v: #34d399;
+      --color-v-bg: rgba(52, 211, 153, 0.14);
+      --color-accent: #818cf8;
+      --color-accent-bg: rgba(129, 140, 248, 0.14);
+      --color-danger: #f87171;
+      --radius-lg: 16px;
+      --radius-md: 12px;
+      --shadow-card: 0 12px 32px -8px rgba(0, 0, 0, 0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at 15% 0%, #172036 0%, var(--bg-primary) 55%);
+      color: var(--text-main);
+      line-height: 1.65;
+      padding-bottom: 5rem;
+    }
+
+    /* Top Navbar */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 15, 25, 0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-focus);
+      padding: 0.85rem 1.5rem;
+    }
+    .top-nav-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      font-size: 0.98rem;
+      color: var(--text-main);
+      text-decoration: none;
+    }
+    .nav-links {
+      display: flex;
+      gap: 0.65rem;
+      flex-wrap: wrap;
+    }
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: var(--text-main);
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border-focus);
+      transition: all 0.2s ease;
+    }
+    .btn-nav:hover {
+      border-color: var(--color-q);
+      color: var(--color-q);
+      transform: translateY(-1px);
+    }
+    .btn-nav.primary {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(129, 140, 248, 0.2));
+      border-color: var(--color-q);
+    }
+
+    /* Layout Container */
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Hero Header */
+    .hero {
+      background: linear-gradient(145deg, rgba(30, 41, 59, 0.7), rgba(17, 24, 39, 0.95));
+      border: 1px solid var(--border-focus);
+      border-radius: var(--radius-lg);
+      padding: 2.4rem 2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      background: var(--color-accent-bg);
+      border: 1px solid rgba(129, 140, 248, 0.4);
+      color: var(--color-accent);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.8rem;
+    }
+    .hero h1 {
+      margin: 0 0 0.75rem 0;
+      font-size: clamp(1.85rem, 3.5vw, 2.65rem);
+      line-height: 1.2;
+      background: linear-gradient(90deg, #fff, #38bdf8, #fbbf24, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 1.08rem;
+      max-width: 820px;
+    }
+    .step-pills {
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+    }
+    .step-pill {
+      padding: 0.4rem 0.85rem;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-focus);
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+    .step-pill:hover {
+      color: var(--text-main);
+      border-color: var(--color-q);
+    }
+
+    /* Section Cards */
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-focus);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: var(--shadow-card);
+    }
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 1rem;
+    }
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      color: #0b0f19;
+      font-weight: 800;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .step-header h2 {
+      margin: 0;
+      font-size: 1.45rem;
+    }
+    .step-header .step-subtitle {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      margin-left: auto;
+    }
+
+    /* Widget #1: Sentence Attention Explorer */
+    .widget-box {
+      background: #0d1322;
+      border: 1px solid var(--border-focus);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .widget-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+    .btn-group {
+      display: inline-flex;
+      background: #161f33;
+      padding: 0.3rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-focus);
+      gap: 0.3rem;
+      flex-wrap: wrap;
+    }
+    .btn-toggle {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-toggle.active {
+      background: var(--color-q);
+      color: #0b0f19;
+      box-shadow: 0 2px 10px rgba(56, 189, 248, 0.35);
+    }
+
+    .sentence-stage {
+      position: relative;
+      padding: 5.5rem 1rem 1.5rem 1rem;
+      background: rgba(17, 24, 39, 0.7);
+      border-radius: 12px;
+      border: 1px dashed #334155;
+      overflow-x: auto;
+    }
+    .attention-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+    .word-row {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 680px;
+      position: relative;
+      z-index: 2;
+    }
+    .word-token {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.55rem 0.75rem;
+      border-radius: 10px;
+      background: #1e293b;
+      border: 2px solid #334155;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.2s ease;
+      min-width: 64px;
+    }
+    .word-token:hover {
+      transform: translateY(-2px);
+      border-color: var(--color-q);
+    }
+    .word-token.selected-query {
+      background: var(--color-q-bg);
+      border-color: var(--color-q);
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.35);
+    }
+    .word-token .word-text {
+      font-weight: 700;
+      font-size: 0.98rem;
+      color: var(--text-main);
+    }
+    .word-token .word-weight {
+      margin-top: 0.28rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.1rem 0.45rem;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.85);
+      color: var(--color-k);
+    }
+    .sentence-insight {
+      margin-top: 1rem;
+      padding: 0.9rem 1.15rem;
+      border-radius: 10px;
+      background: rgba(56, 189, 248, 0.1);
+      border-left: 4px solid var(--color-q);
+      font-size: 0.94rem;
+    }
+
+    /* Q, K, V Analogy Cards */
+    .qkv-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+    .qkv-card {
+      padding: 1.35rem;
+      border-radius: var(--radius-md);
+      background: #141c2f;
+      border: 1px solid var(--border-focus);
+      position: relative;
+    }
+    .qkv-card.q-card { border-top: 4px solid var(--color-q); }
+    .qkv-card.k-card { border-top: 4px solid var(--color-k); }
+    .qkv-card.v-card { border-top: 4px solid var(--color-v); }
+
+    .qkv-tag {
+      display: inline-block;
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 0.8rem;
+      margin-bottom: 0.5rem;
+    }
+    .q-card .qkv-tag { background: var(--color-q-bg); color: var(--color-q); }
+    .k-card .qkv-tag { background: var(--color-k-bg); color: var(--color-k); }
+    .v-card .qkv-tag { background: var(--color-v-bg); color: var(--color-v); }
+
+    /* Step 2: 5-Stage Stepper */
+    .stepper-tabs {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 768px) {
+      .stepper-tabs {
+        grid-template-columns: 1fr;
+      }
+    }
+    .stage-tab {
+      background: #161f33;
+      border: 1px solid var(--border-focus);
+      border-radius: 10px;
+      padding: 0.7rem 0.6rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+    }
+    .stage-tab:hover {
+      border-color: var(--color-q);
+      color: var(--text-main);
+    }
+    .stage-tab.active {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(129, 140, 248, 0.18));
+      border-color: var(--color-q);
+      color: var(--text-main);
+    }
+    .stage-tab-num {
+      display: block;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--color-q);
+      letter-spacing: 0.04em;
+    }
+    .stage-tab-title {
+      font-weight: 700;
+      font-size: 0.86rem;
+      margin-top: 0.15rem;
+    }
+
+    .stage-Controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .btn-action {
+      background: var(--bg-card-alt);
+      color: var(--text-main);
+      border: 1px solid var(--border-focus);
+      padding: 0.55rem 1.15rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action:hover:not(:disabled) {
+      border-color: var(--color-q);
+      color: var(--color-q);
+    }
+    .btn-action:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .btn-action.primary {
+      background: var(--color-q);
+      color: #0b0f19;
+      border-color: var(--color-q);
+    }
+
+    /* Tensor Visual Tables inside Stepper */
+    .tensor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.1rem;
+      margin-top: 1rem;
+    }
+    .tensor-card {
+      background: #141d30;
+      border: 1px solid var(--border-focus);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .tensor-card h4 {
+      margin: 0 0 0.65rem 0;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .vec-pill {
+      display: inline-flex;
+      gap: 0.35rem;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.86rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      background: #0b0f19;
+      border: 1px solid #334155;
+    }
+    .vec-pill.q { border-color: var(--color-q); color: var(--color-q); }
+    .vec-pill.k { border-color: var(--color-k); color: var(--color-k); }
+    .vec-pill.v { border-color: var(--color-v); color: var(--color-v); }
+
+    .heatmap-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88rem;
+    }
+    .heatmap-table th, .heatmap-table td {
+      border: 1px solid #28354d;
+      padding: 0.65rem;
+      text-align: center;
+    }
+    .heatmap-table th {
+      background: #161f33;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .heatmap-cell {
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      border-radius: 4px;
+    }
+    .heatmap-cell:hover, .heatmap-cell.active-cell {
+      outline: 2px solid var(--color-q);
+      transform: scale(1.03);
+    }
+
+    /* Widget #2: Live Q-K-V Calculator */
+    .sandbox-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+    @media (max-width: 860px) {
+      .sandbox-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .slider-group {
+      background: #141d30;
+      border: 1px solid var(--border-focus);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-bottom: 0.85rem;
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 0.45rem;
+      font-size: 0.86rem;
+    }
+    .slider-row input[type="range"] {
+      flex: 1;
+      accent-color: var(--color-q);
+      cursor: pointer;
+    }
+    .bar-track {
+      width: 100%;
+      height: 24px;
+      background: #0b0f19;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #28354d;
+      margin: 0.35rem 0 0.75rem 0;
+    }
+    .bar-fill {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      padding-left: 0.65rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #0b0f19;
+      transition: width 0.2s ease;
+    }
+
+    /* Code Block */
+    pre.code-block {
+      background: #090d16;
+      border: 1px solid var(--border-focus);
+      border-radius: 12px;
+      padding: 1.25rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: #e2e8f0;
+    }
+    .code-comment { color: #64748b; font-style: italic; }
+    .code-kw { color: #c084fc; font-weight: 600; }
+    .code-fn { color: #38bdf8; }
+    .code-num { color: #fbbf24; }
+
+    /* Flip Flashcards */
+    .flashcard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.15rem;
+      margin-top: 1.25rem;
+    }
+    .flashcard {
+      perspective: 1000px;
+      min-height: 205px;
+      cursor: pointer;
+    }
+    .flashcard-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      min-height: 205px;
+      transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+    }
+    .flashcard.flipped .flashcard-inner {
+      transform: rotateY(180deg);
+    }
+    .flashcard-front, .flashcard-back {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid var(--border-focus);
+    }
+    .flashcard-front {
+      background: linear-gradient(145deg, #161f33, #111827);
+    }
+    .flashcard-back {
+      background: linear-gradient(145deg, rgba(56, 189, 248, 0.16), #111827);
+      border-color: var(--color-q);
+      transform: rotateY(180deg);
+    }
+    .flashcard-hint {
+      font-size: 0.75rem;
+      color: var(--color-q);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Mermaid Wrapper */
+    .mermaid-box {
+      background: #0d1322;
+      border: 1px solid var(--border-focus);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation -->
+  <nav class="top-nav">
+    <div class="top-nav-inner">
+      <a href="../../index.html" class="nav-brand">
+        <span>🧠</span>
+        <span>Transformer Visual Notes · Topic #1: Self-Attention</span>
+      </a>
+      <div class="nav-links">
+        <a href="../../index.html" class="btn-nav">← Back to Learning Hub</a>
+        <a href="./notes.md" class="btn-nav primary">📄 View Markdown Notes (GitHub)</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- Hero Header -->
+    <header class="hero">
+      <div class="hero-badge">🎯 Topic #1 · Visual Deep-Dive</div>
+      <h1>Self-Attention: Queries, Keys, Values &amp; Scaled Dot-Product</h1>
+      <p>
+        Understand how Transformers turn static, context-blind words into rich, context-aware representations by letting every word dynamically query and blend information from every other word in the sentence.
+      </p>
+      <div class="step-pills">
+        <a href="#step-1" class="step-pill">1. Big Picture &amp; Intuition</a>
+        <a href="#step-2" class="step-pill">2. 5-Stage Tensor Stepper</a>
+        <a href="#step-3" class="step-pill">3. Architecture Blueprint</a>
+        <a href="#step-4" class="step-pill">4. Live Math Sandbox</a>
+        <a href="#step-5" class="step-pill">5. PyTorch &amp; Flashcards</a>
+      </div>
+    </header>
+
+    <!-- =====================================================================
+         STEP 1: THE BIG PICTURE & INTUITION
+    ====================================================================== -->
+    <section id="step-1" class="section-card">
+      <div class="step-header">
+        <span class="step-num">1</span>
+        <div>
+          <h2>The Big Picture &amp; Intuition</h2>
+        </div>
+        <span class="step-subtitle">"Why do words need to look at each other?"</span>
+      </div>
+
+      <p>
+        In human language, a single pronoun like <strong>"it"</strong> completely changes meaning depending on a single adjective at the end of the sentence. Before Self-Attention, static word embeddings gave <strong>"it"</strong> the exact same vector every time.
+      </p>
+
+      <!-- INTERACTIVE WIDGET #1: SENTENCE ATTENTION EXPLORER -->
+      <div class="widget-box">
+        <div class="widget-toolbar">
+          <div>
+            <strong>🔍 Interactive Widget #1: Sentence Attention Explorer</strong>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+              Toggle between Sentence A and Sentence B, then <strong>click any word</strong> (especially <code>"it"</code>) to inspect its attention rays!
+            </div>
+          </div>
+          <div class="btn-group">
+            <button id="btn-sent-a" class="btn-toggle active" onclick="setSentence('A')">
+              Sentence A ("...too tired")
+            </button>
+            <button id="btn-sent-b" class="btn-toggle" onclick="setSentence('B')">
+              Sentence B ("...too wide")
+            </button>
+          </div>
+        </div>
+
+        <div class="sentence-stage" id="sentence-stage">
+          <svg id="attention-svg" class="attention-svg"></svg>
+          <div id="word-row" class="word-row"></div>
+        </div>
+
+        <div id="sentence-insight" class="sentence-insight"></div>
+      </div>
+
+      <!-- THE SEARCH ENGINE / LIBRARY ANALOGY -->
+      <h3 style="margin-top: 2rem; margin-bottom: 0.5rem;">📚 The Search Engine / Library Analogy ($Q$, $K$, $V$)</h3>
+      <p style="color: var(--text-muted); margin-top: 0;">
+        How does a word mathematically "look for" relevant words? Every input word vector $x_i$ is multiplied by three learned weight matrices ($W_Q, W_K, W_V$) to create three distinct vectors:
+      </p>
+
+      <div class="qkv-grid">
+        <div class="qkv-card q-card">
+          <span class="qkv-tag">QUERY (Q) · Cyan</span>
+          <h4 style="margin: 0.25rem 0 0.5rem 0;">"What am I looking for?"</h4>
+          <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+            Like typing a search query into Google. When the word <strong>"it"</strong> is the active token, its Query $q_{\text{it}}$ searches the sentence for a singular noun that matches the predicate (<em>"tired"</em> vs <em>"wide"</em>).
+          </p>
+          <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--color-q); font-weight: 700;">
+            Formula: $Q = X W_Q$
+          </div>
+        </div>
+
+        <div class="qkv-card k-card">
+          <span class="qkv-tag">KEY (K) · Amber</span>
+          <h4 style="margin: 0.25rem 0 0.5rem 0;">"What do I contain / advertise?"</h4>
+          <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+            Like the title and tags on the spine of a library book. Every word broadcasts a Key $k_j$ advertising its grammatical and semantic features (e.g., <em>"animate noun"</em> or <em>"physical object"</em>).
+          </p>
+          <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--color-k); font-weight: 700;">
+            Formula: $K = X W_K$
+          </div>
+        </div>
+
+        <div class="qkv-card v-card">
+          <span class="qkv-tag">VALUE (V) · Emerald</span>
+          <h4 style="margin: 0.25rem 0 0.5rem 0;">"What information do I pass along?"</h4>
+          <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0;">
+            Like the actual pages inside the book once opened. Once Query $q_i$ and Key $k_j$ match with a high attention weight $\alpha_{ij}$, the word absorbs $\alpha_{ij} \cdot v_j$!
+          </p>
+          <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--color-v); font-weight: 700;">
+            Formula: $V = X W_V$
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         STEP 2: INTERACTIVE 5-STAGE STEP-BY-STEP VISUALIZER
+    ====================================================================== -->
+    <section id="step-2" class="section-card">
+      <div class="step-header">
+        <span class="step-num">2</span>
+        <div>
+          <h2>Interactive 5-Stage Step-by-Step Visualizer</h2>
+        </div>
+        <span class="step-subtitle">"Watch 2D Tensors Flow Through Every Stage"</span>
+      </div>
+
+      <p>
+        Let's trace a tiny 3-word sentence <code>["Dream", "big", "now"]</code> using <strong>2-dimensional vectors ($d_k = 2$)</strong> so you can inspect every single multiplication and addition with zero black boxes.
+      </p>
+
+      <div class="widget-box">
+        <!-- Stage Tabs 1 to 5 -->
+        <div class="stepper-tabs">
+          <button class="stage-tab active" onclick="setStage(1)" id="tab-stage-1">
+            <span class="stage-tab-num">Stage 1</span>
+            <div class="stage-tab-title">Word Embeddings ($X$)</div>
+          </button>
+          <button class="stage-tab" onclick="setStage(2)" id="tab-stage-2">
+            <span class="stage-tab-num">Stage 2</span>
+            <div class="stage-tab-title">Create $Q$, $K$, $V$</div>
+          </button>
+          <button class="stage-tab" onclick="setStage(3)" id="tab-stage-3">
+            <span class="stage-tab-num">Stage 3</span>
+            <div class="stage-tab-title">Similarity ($Q \cdot K^T$)</div>
+          </button>
+          <button class="stage-tab" onclick="setStage(4)" id="tab-stage-4">
+            <span class="stage-tab-num">Stage 4</span>
+            <div class="stage-tab-title">Scale &amp; Softmax</div>
+          </button>
+          <button class="stage-tab" onclick="setStage(5)" id="tab-stage-5">
+            <span class="stage-tab-num">Stage 5</span>
+            <div class="stage-tab-title">Weighted Sum ($\alpha V$)</div>
+          </button>
+        </div>
+
+        <!-- Dynamic Stage Content Container -->
+        <div id="stage-content-area"></div>
+
+        <!-- Bottom Navigation Controls -->
+        <div class="stage-Controls">
+          <button id="btn-prev-stage" class="btn-action" onclick="changeStage(-1)">
+            ← Previous Step
+          </button>
+          <span id="stage-indicator" style="font-size: 0.88rem; color: var(--text-muted); font-weight: 600;">
+            Stage 1 of 5
+          </span>
+          <button id="btn-next-stage" class="btn-action primary" onclick="changeStage(1)">
+            Next Step →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         STEP 3: DECONSTRUCTED ARCHITECTURE DIAGRAM
+    ====================================================================== -->
+    <section id="step-3" class="section-card">
+      <div class="step-header">
+        <span class="step-num">3</span>
+        <div>
+          <h2>Deconstructed Architecture Diagram</h2>
+        </div>
+        <span class="step-subtitle">Single-Head vs. Multi-Head Attention</span>
+      </div>
+
+      <p>
+        Below is the complete computational graph inside every Transformer block. Notice how $Q$ and $K$ interact first to build the $N \times N$ routing table, which then gates the $V$ vectors.
+      </p>
+
+      <div class="mermaid-box">
+        <pre class="mermaid">
+flowchart LR
+    X["Input Tokens X<br/>(N × d_model)"] --> WQ["Linear W_Q"]
+    X --> WK["Linear W_K"]
+    X --> WV["Linear W_V"]
+
+    WQ --> Q["Queries Q<br/>(N × d_k)"]
+    WK --> K["Keys K<br/>(N × d_k)"]
+    WV --> V["Values V<br/>(N × d_v)"]
+
+    Q --> MM1["MatMul: Q · Kᵀ<br/>Raw Scores (N × N)"]
+    K --> MM1
+
+    MM1 --> SC["Scale: ÷ √d_k<br/>Unit Variance"]
+    SC --> MSK["Mask (opt.)<br/>Future → -∞"]
+    MSK --> SM["Row Softmax<br/>Weights α (N × N)"]
+
+    SM --> MM2["MatMul: α · V<br/>Contextual Output (N × d_v)"]
+    V --> MM2
+
+    style Q fill:#0c2d48,stroke:#38bdf8,color:#f8fafc
+    style K fill:#3b2806,stroke:#fbbf24,color:#f8fafc
+    style V fill:#063626,stroke:#34d399,color:#f8fafc
+    style SM fill:#1e1b4b,stroke:#818cf8,color:#f8fafc
+    style MM2 fill:#063626,stroke:#34d399,color:#f8fafc
+        </pre>
+      </div>
+
+      <!-- Multi-Head Attention Callout -->
+      <div class="sentence-insight" style="margin-top: 1.5rem; border-left-color: var(--color-accent); background: var(--color-accent-bg);">
+        <h4 style="margin: 0 0 0.35rem 0; color: var(--color-accent);">
+          🔀 Why Multi-Head Attention? (Running Multiple $Q, K, V$ Heads in Parallel)
+        </h4>
+        <p style="margin: 0; font-size: 0.93rem;">
+          A single attention head can only focus on one dominant relationship per token. <strong>Multi-Head Attention</strong> splits $d_{\text{model}}$ into $h$ smaller subspaces (e.g., $h=8$ heads of $d_k = 64$ each) and runs Scaled Dot-Product Attention in parallel:
+          <strong>Head 1</strong> can track pronoun coreference (<em>"it" → "animal"</em>), <strong>Head 2</strong> can track verb-object grammar (<em>"cross" → "street"</em>), and <strong>Head 3</strong> can track adjective intensity (<em>"too" → "tired"</em>). Their outputs are concatenated and projected via $W_O$.
+        </p>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         STEP 4: MATH DEMYSTIFIED WITH LIVE INTERACTIVE TOY CALCULATOR
+    ====================================================================== -->
+    <section id="step-4" class="section-card">
+      <div class="step-header">
+        <span class="step-num">4</span>
+        <div>
+          <h2>Math Demystified + Live Query-Key-Value Sandbox</h2>
+        </div>
+        <span class="step-subtitle">Drag sliders to see $Q, K, V$ and $\div\sqrt{d_k}$ in real time</span>
+      </div>
+
+      <!-- Color-coded Master Equation -->
+      <div class="widget-box" style="text-align: center; padding: 1.4rem;">
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem;">
+          THE MASTER EQUATION OF SCALED DOT-PRODUCT ATTENTION
+        </div>
+        <div style="font-size: 1.35rem; overflow-x: auto;">
+          $$\text{Attention}({\color{#38bdf8}Q}, {\color{#fbbf24}K}, {\color{#34d399}V}) = \text{softmax}\!\left(\frac{{\color{#38bdf8}Q} {\color{#fbbf24}K}^T}{\sqrt{d_k}}\right) {\color{#34d399}V}$$
+        </div>
+      </div>
+
+      <!-- INTERACTIVE WIDGET #2: LIVE SANDBOX -->
+      <div class="widget-box">
+        <div class="widget-toolbar">
+          <div>
+            <strong>🎛️ Interactive Widget #2: Live 2D Query-Key-Value Sandbox</strong>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">
+              Adjust Query $q = [q_1, q_2]$ and Keys $k_A, k_B$, or toggle the scaling factor to witness Softmax saturation!
+            </div>
+          </div>
+          <div class="btn-group">
+            <button id="scale-btn-sqrt" class="btn-toggle active" onclick="setScaleMode('sqrt')">
+              ✅ Scaled ($\div \sqrt{2} \approx 1.41$)
+            </button>
+            <button id="scale-btn-none" class="btn-toggle" onclick="setScaleMode('none')">
+              ⚠️ Unscaled ($\div 1.0$)
+            </button>
+            <button id="scale-btn-sharp" class="btn-toggle" onclick="setScaleMode('sharp')">
+              🔥 Saturated ($\times 5.0$ Large $d_k$)
+            </button>
+          </div>
+        </div>
+
+        <div class="sandbox-grid">
+          <!-- Left Column: Sliders -->
+          <div>
+            <!-- Query Sliders -->
+            <div class="slider-group" style="border-left: 4px solid var(--color-q);">
+              <div style="display:flex; justify-content:space-between; font-weight:700; color:var(--color-q);">
+                <span>🟦 Query Vector $q$</span>
+                <span id="lbl-q-vec">[1.0, 0.2]</span>
+              </div>
+              <div class="slider-row">
+                <span>$q_1$:</span>
+                <input type="range" id="sl-q1" min="-2" max="2" step="0.1" value="1.0" oninput="updateSandbox()" />
+              </div>
+              <div class="slider-row">
+                <span>$q_2$:</span>
+                <input type="range" id="sl-q2" min="-2" max="2" step="0.1" value="0.2" oninput="updateSandbox()" />
+              </div>
+            </div>
+
+            <!-- Key A Sliders -->
+            <div class="slider-group" style="border-left: 4px solid var(--color-k);">
+              <div style="display:flex; justify-content:space-between; font-weight:700; color:var(--color-k);">
+                <span>🟨 Token A Key $k_A$ &amp; Value $v_A = [2.0, 0.0]$</span>
+                <span id="lbl-ka-vec">[1.2, 0.4]</span>
+              </div>
+              <div class="slider-row">
+                <span>$k_{A1}$:</span>
+                <input type="range" id="sl-ka1" min="-2" max="2" step="0.1" value="1.2" oninput="updateSandbox()" />
+              </div>
+              <div class="slider-row">
+                <span>$k_{A2}$:</span>
+                <input type="range" id="sl-ka2" min="-2" max="2" step="0.1" value="0.4" oninput="updateSandbox()" />
+              </div>
+            </div>
+
+            <!-- Key B Sliders -->
+            <div class="slider-group" style="border-left: 4px solid var(--color-k);">
+              <div style="display:flex; justify-content:space-between; font-weight:700; color:var(--color-k);">
+                <span>🟨 Token B Key $k_B$ &amp; Value $v_B = [0.0, 4.0]$</span>
+                <span id="lbl-kb-vec">[-0.2, 1.4]</span>
+              </div>
+              <div class="slider-row">
+                <span>$k_{B1}$:</span>
+                <input type="range" id="sl-kb1" min="-2" max="2" step="0.1" value="-0.2" oninput="updateSandbox()" />
+              </div>
+              <div class="slider-row">
+                <span>$k_{B2}$:</span>
+                <input type="range" id="sl-kb2" min="-2" max="2" step="0.1" value="1.4" oninput="updateSandbox()" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Live Readout -->
+          <div style="background:#141d30; border:1px solid var(--border-focus); border-radius:10px; padding:1.25rem;">
+            <h4 style="margin:0 0 0.85rem 0;">⚡ Live Step-by-Step Calculation</h4>
+
+            <div style="font-size:0.88rem; margin-bottom:0.85rem;">
+              <div><strong>1. Raw Dot Products ($q \cdot k_i$):</strong></div>
+              <div id="sb-raw-scores" style="font-family:monospace; color:var(--text-muted); margin-top:0.2rem;"></div>
+            </div>
+
+            <div style="font-size:0.88rem; margin-bottom:0.85rem;">
+              <div><strong>2. Scaled Logits:</strong></div>
+              <div id="sb-scaled-scores" style="font-family:monospace; color:var(--color-k); margin-top:0.2rem;"></div>
+            </div>
+
+            <div style="font-size:0.88rem; margin-bottom:0.9rem;">
+              <div><strong>3. Softmax Attention Weights ($\alpha_A, \alpha_B$):</strong></div>
+              <div style="margin-top:0.4rem;">Token A Attention ($\alpha_A$):</div>
+              <div class="bar-track">
+                <div id="bar-alpha-a" class="bar-fill" style="background:var(--color-q); width:50%;">50%</div>
+              </div>
+              <div>Token B Attention ($\alpha_B$):</div>
+              <div class="bar-track">
+                <div id="bar-alpha-b" class="bar-fill" style="background:var(--color-v); width:50%;">50%</div>
+              </div>
+            </div>
+
+            <div style="padding:0.85rem; background:#0b0f19; border:1px solid var(--color-v); border-radius:8px;">
+              <div style="font-size:0.82rem; color:var(--color-v); font-weight:700; text-transform:uppercase;">
+                4. Final Contextualized Output Vector ($z = \alpha_A v_A + \alpha_B v_B$)
+              </div>
+              <div id="sb-final-output" style="font-family:monospace; font-size:1rem; font-weight:700; margin-top:0.35rem;"></div>
+              <div id="sb-grad-note" style="font-size:0.8rem; color:var(--text-muted); margin-top:0.35rem;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         STEP 5: MINIMAL PYTORCH CODE & SELF-CHECK FLASHCARDS
+    ====================================================================== -->
+    <section id="step-5" class="section-card">
+      <div class="step-header">
+        <span class="step-num">5</span>
+        <div>
+          <h2>Minimal PyTorch Implementation &amp; Self-Check Flashcards</h2>
+        </div>
+        <span class="step-subtitle">Code + Active Recall</span>
+      </div>
+
+      <p>
+        Every line of the PyTorch implementation below maps 1-to-1 to Stages 3, 4, and 5 of our visual pipeline:
+      </p>
+
+      <pre class="code-block"><code><span class="code-kw">import</span> math
+<span class="code-kw">import</span> torch
+<span class="code-kw">import</span> torch.nn.functional <span class="code-kw">as</span> F
+
+<span class="code-kw">def</span> <span class="code-fn">scaled_dot_product_attention</span>(Q, K, V, mask=<span class="code-kw">None</span>):
+    <span class="code-comment"># Q, K, V shapes: (batch_size, num_heads, seq_len, d_k)</span>
+    d_k = Q.size(-<span class="code-num">1</span>)
+
+    <span class="code-comment"># Stage 3: Similarity Scores (Q · K^T) -> shape: (..., seq_len, seq_len)</span>
+    scores = torch.matmul(Q, K.transpose(-<span class="code-num">2</span>, -<span class="code-num">1</span>))
+
+    <span class="code-comment"># Stage 4a: Scale by sqrt(d_k) to prevent Softmax saturation</span>
+    scaled_scores = scores / math.sqrt(d_k)
+
+    <span class="code-comment"># Optional Causal Mask (for GPT decoders): set future tokens to -inf</span>
+    <span class="code-kw">if</span> mask <span class="code-kw">is not None</span>:
+        scaled_scores = scaled_scores.masked_fill(mask == <span class="code-num">0</span>, <span class="code-fn">float</span>(<span class="code-num">"-inf"</span>))
+
+    <span class="code-comment"># Stage 4b: Row-wise Softmax -> probabilities summing to 1.0 (100%)</span>
+    attn_weights = F.softmax(scaled_scores, dim=-<span class="code-num">1</span>)
+
+    <span class="code-comment"># Stage 5: Weighted Sum of Values (Weights · V) -> shape: (..., seq_len, d_v)</span>
+    output = torch.matmul(attn_weights, V)
+    <span class="code-kw">return</span> output, attn_weights</code></pre>
+
+      <!-- 4 Interactive Flip Flashcards -->
+      <h3 style="margin-top: 2rem; margin-bottom: 0.4rem;">🃏 Self-Check Flip Flashcards (Click any card to flip)</h3>
+      <p style="color: var(--text-muted); margin-top: 0; font-size: 0.92rem;">
+        Test your intuition on the 4 classic interview &amp; research questions about Self-Attention:
+      </p>
+
+      <div class="flashcard-grid">
+        <!-- Card 1 -->
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="flashcard-front">
+              <span class="flashcard-hint">Question 1 of 4 · Click to Flip</span>
+              <h4 style="margin: 0.5rem 0;">Why do we need separate $Q$, $K$, and $V$ instead of just multiplying $X \cdot X^T$?</h4>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Hint: Think symmetry &amp; roles</span>
+            </div>
+            <div class="flashcard-back">
+              <span class="flashcard-hint" style="color: var(--color-v);">Answer 1</span>
+              <p style="font-size: 0.88rem; margin: 0.4rem 0;">
+                $X \cdot X^T$ is forced to be <strong>symmetric</strong> (A attends to B equally as B attends to A) and makes every word attend maximally to itself. Separate $Q, K, V$ projections enable <strong>asymmetric routing</strong> (e.g., pronoun <em>"it"</em> querying noun <em>"animal"</em>) and decouple matching ($Q, K$) from content ($V$).
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="flashcard-front">
+              <span class="flashcard-hint">Question 2 of 4 · Click to Flip</span>
+              <h4 style="margin: 0.5rem 0;">Why divide by $\sqrt{d_k}$ before applying Softmax?</h4>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Hint: What happens when $d_k$ is large?</span>
+            </div>
+            <div class="flashcard-back">
+              <span class="flashcard-hint" style="color: var(--color-v);">Answer 2</span>
+              <p style="font-size: 0.88rem; margin: 0.4rem 0;">
+                If $q$ and $k$ have unit variance, their dot product $q \cdot k$ has variance $d_k$ (std $\sqrt{d_k}$). For large $d_k$, dot products grow huge, pushing Softmax into flat regions where <strong>gradients vanish ($\approx 0$)</strong>. Dividing by $\sqrt{d_k}$ restores unit variance!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="flashcard-front">
+              <span class="flashcard-hint">Question 3 of 4 · Click to Flip</span>
+              <h4 style="margin: 0.5rem 0;">What is the shape of the Attention Matrix for a sequence of $N$ tokens?</h4>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Hint: Why are long contexts expensive?</span>
+            </div>
+            <div class="flashcard-back">
+              <span class="flashcard-hint" style="color: var(--color-v);">Answer 3</span>
+              <p style="font-size: 0.88rem; margin: 0.4rem 0;">
+                Since every token's Query ($N \times d_k$) dot-products with every token's Key ($d_k \times N$), the attention matrix per head has shape <strong>$N \times N$</strong>. This gives Self-Attention <strong>$O(N^2)$ time and memory complexity</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="flashcard" onclick="this.classList.toggle('flipped')">
+          <div class="flashcard-inner">
+            <div class="flashcard-front">
+              <span class="flashcard-hint">Question 4 of 4 · Click to Flip</span>
+              <h4 style="margin: 0.5rem 0;">How does Causal Masking (in GPT decoders) change Stage 3/4?</h4>
+              <span style="font-size: 0.8rem; color: var(--text-muted);">Hint: How do we block future tokens?</span>
+            </div>
+            <div class="flashcard-back">
+              <span class="flashcard-hint" style="color: var(--color-v);">Answer 4</span>
+              <p style="font-size: 0.88rem; margin: 0.4rem 0;">
+                Right before Softmax, all upper-triangular entries $(j > i)$ in the $N \times N$ score matrix are set to <strong>$-\infty$</strong>. Because $e^{-\infty} = 0$, Softmax assigns <strong>exact $0\%$ weight</strong> to all future tokens!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Shared Optional Script -->
+  <script src="../../assets/js/core.js"></script>
+
+  <!-- Self-Contained Interactive Logic for Self-Attention Widgets -->
+  <script>
+    // =========================================================================
+    // WIDGET #1: SENTENCE ATTENTION EXPLORER
+    // =========================================================================
+    const SENTENCE_DATA = {
+      A: {
+        words: ["The", "animal", "didn't", "cross", "the", "street", "because", "it", "was", "too", "tired"],
+        defaultSelected: 7, // "it"
+        weights: {
+          7: [0.02, 0.72, 0.01, 0.02, 0.01, 0.04, 0.01, 0.08, 0.01, 0.01, 0.07],
+          1: [0.12, 0.48, 0.03, 0.08, 0.01, 0.04, 0.01, 0.14, 0.01, 0.01, 0.07],
+          5: [0.02, 0.05, 0.02, 0.24, 0.18, 0.42, 0.01, 0.03, 0.01, 0.01, 0.01],
+          10: [0.01, 0.44, 0.02, 0.02, 0.01, 0.02, 0.02, 0.26, 0.04, 0.06, 0.10]
+        },
+        insight: `In <strong>Sentence A</strong>, the adjective at the end is <strong>"tired"</strong>. When <code>"it"</code> issues its Query, its attention locks onto <strong>"animal" (72%)</strong> because animate creatures get tired!`
+      },
+      B: {
+        words: ["The", "animal", "didn't", "cross", "the", "street", "because", "it", "was", "too", "wide"],
+        defaultSelected: 7, // "it"
+        weights: {
+          7: [0.01, 0.05, 0.01, 0.02, 0.02, 0.75, 0.01, 0.05, 0.01, 0.01, 0.06],
+          1: [0.15, 0.55, 0.04, 0.12, 0.01, 0.04, 0.01, 0.04, 0.01, 0.01, 0.02],
+          5: [0.01, 0.04, 0.01, 0.18, 0.14, 0.36, 0.01, 0.16, 0.01, 0.01, 0.07],
+          10: [0.01, 0.03, 0.01, 0.02, 0.02, 0.49, 0.02, 0.24, 0.04, 0.05, 0.07]
+        },
+        insight: `In <strong>Sentence B</strong>, changing just the final word to <strong>"wide"</strong> shifts the contextual meaning: <code>"it"</code> now routes <strong>75% of its attention to "street"</strong>!`
+      }
+    };
+
+    let currentSentenceKey = 'A';
+    let selectedWordIdx = 7;
+
+    function getWeightsForWord(sentKey, idx) {
+      const data = SENTENCE_DATA[sentKey];
+      if (data.weights[idx]) return data.weights[idx];
+      // Fallback smooth local + self attention distribution for any other clicked word
+      const n = data.words.length;
+      const raw = [];
+      let sum = 0;
+      for (let i = 0; i < n; i++) {
+        const dist = Math.abs(i - idx);
+        const val = dist === 0 ? 0.45 : dist === 1 ? 0.18 : 0.05;
+        raw.push(val);
+        sum += val;
+      }
+      return raw.map(v => v / sum);
+    }
+
+    function setSentence(key) {
+      currentSentenceKey = key;
+      document.getElementById('btn-sent-a').classList.toggle('active', key === 'A');
+      document.getElementById('btn-sent-b').classList.toggle('active', key === 'B');
+      renderSentenceExplorer();
+    }
+
+    function selectWord(idx) {
+      selectedWordIdx = idx;
+      renderSentenceExplorer();
+    }
+
+    function renderSentenceExplorer() {
+      const data = SENTENCE_DATA[currentSentenceKey];
+      const weights = getWeightsForWord(currentSentenceKey, selectedWordIdx);
+      const rowEl = document.getElementById('word-row');
+      rowEl.innerHTML = '';
+
+      data.words.forEach((word, i) => {
+        const w = weights[i];
+        const pct = Math.round(w * 100);
+        const tokenEl = document.createElement('div');
+        tokenEl.className = 'word-token' + (i === selectedWordIdx ? ' selected-query' : '');
+        tokenEl.style.borderColor = i === selectedWordIdx
+          ? '#38bdf8'
+          : `rgba(251, 191, 36, ${Math.min(1, w * 1.4 + 0.15)})`;
+        tokenEl.onclick = () => selectWord(i);
+        tokenEl.innerHTML = `
+          <span class="word-text">${word}</span>
+          <span class="word-weight">${pct}%</span>
+        `;
+        rowEl.appendChild(tokenEl);
+      });
+
+      const queryWord = data.words[selectedWordIdx];
+      let maxIdx = 0;
+      weights.forEach((v, i) => { if (v > weights[maxIdx]) maxIdx = i; });
+      const topTarget = data.words[maxIdx];
+      const topPct = Math.round(weights[maxIdx] * 100);
+
+      document.getElementById('sentence-insight').innerHTML = `
+        <div><strong>Active Query Token:</strong> <code>"${queryWord}"</code> (position ${selectedWordIdx + 1}) → Highest attention target is <strong>"${topTarget}" (${topPct}%)</strong>.</div>
+        <div style="margin-top:0.25rem; color:var(--text-muted);">${data.insight}</div>
+      `;
+
+      requestAnimationFrame(drawAttentionLines);
+    }
+
+    function drawAttentionLines() {
+      const svg = document.getElementById('attention-svg');
+      const stage = document.getElementById('sentence-stage');
+      const tokens = stage.querySelectorAll('.word-token');
+      if (!tokens.length) return;
+
+      const stageRect = stage.getBoundingClientRect();
+      svg.innerHTML = '';
+
+      const weights = getWeightsForWord(currentSentenceKey, selectedWordIdx);
+      const srcEl = tokens[selectedWordIdx];
+      if (!srcEl) return;
+      const srcRect = srcEl.getBoundingClientRect();
+      const x1 = srcRect.left - stageRect.left + srcRect.width / 2;
+      const y1 = srcRect.top - stageRect.top + 4;
+
+      tokens.forEach((targetEl, i) => {
+        const w = weights[i];
+        if (w < 0.02) return;
+        const tRect = targetEl.getBoundingClientRect();
+        const x2 = tRect.left - stageRect.left + tRect.width / 2;
+        const y2 = tRect.top - stageRect.top + 4;
+
+        const dist = Math.abs(x2 - x1);
+        const arcHeight = Math.min(76, Math.max(26, dist * 0.22));
+        const cx = (x1 + x2) / 2;
+        const cy = Math.min(y1, y2) - arcHeight;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', i === selectedWordIdx ? '#38bdf8' : '#fbbf24');
+        path.setAttribute('stroke-width', (1.2 + w * 8).toFixed(2));
+        path.setAttribute('stroke-opacity', Math.min(0.95, 0.18 + w * 1.15).toFixed(2));
+        path.setAttribute('stroke-linecap', 'round');
+        svg.appendChild(path);
+      });
+    }
+
+    window.addEventListener('resize', drawAttentionLines);
+
+    // =========================================================================
+    // STEP 2: 5-STAGE STEP-BY-STEP VISUALIZER
+    // =========================================================================
+    let currentStage = 1;
+    let selectedCell = [0, 1]; // default clicked cell in Stage 3 ("Dream" -> "big")
+
+    const TOY_DATA = {
+      words: ["Dream", "big", "now"],
+      X: [[1.0, 0.0], [0.8, 0.6], [0.0, 1.0]],
+      Q: [[1.0, 0.0], [0.8, 0.6], [0.0, 1.0]],
+      K: [[1.0, 0.2], [0.8, 0.6], [0.2, 1.0]],
+      V: [[2.0, 0.0], [0.0, 3.0], [1.0, 1.0]],
+      rawScores: [
+        [1.00, 0.80, 0.20],
+        [0.92, 1.00, 0.76],
+        [0.20, 0.60, 1.00]
+      ],
+      scaledScores: [
+        [0.71, 0.57, 0.14],
+        [0.65, 0.71, 0.54],
+        [0.14, 0.42, 0.71]
+      ],
+      weights: [
+        [0.41, 0.36, 0.23],
+        [0.33, 0.36, 0.31],
+        [0.24, 0.33, 0.43]
+      ],
+      outputs: [
+        [1.05, 1.31],
+        [0.97, 1.39],
+        [0.91, 1.42]
+      ]
+    };
+
+    function setStage(stageNum) {
+      currentStage = stageNum;
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById(`tab-stage-${i}`).classList.toggle('active', i === stageNum);
+      }
+      document.getElementById('btn-prev-stage').disabled = stageNum === 1;
+      document.getElementById('btn-next-stage').disabled = stageNum === 5;
+      document.getElementById('stage-indicator').textContent = `Stage ${stageNum} of 5`;
+      renderStageContent();
+    }
+
+    function changeStage(delta) {
+      const next = Math.min(5, Math.max(1, currentStage + delta));
+      setStage(next);
+    }
+
+    function selectHeatmapCell(r, c) {
+      selectedCell = [r, c];
+      renderStageContent();
+    }
+
+    function renderStageContent() {
+      const area = document.getElementById('stage-content-area');
+      if (currentStage === 1) {
+        area.innerHTML = `
+          <h3 style="margin:0 0 0.4rem 0;">Stage 1: Input Word Embeddings ($X$)</h3>
+          <p style="margin:0; color:var(--text-muted); font-size:0.93rem;">
+            Each token in our 3-word sentence <code>["Dream", "big", "now"]</code> starts as a 2-number embedding vector $x_i \in \mathbb{R}^2$. Dimension 1 captures <em>action/dreaming</em>; Dimension 2 captures <em>immediacy/time</em>.
+          </p>
+          <div class="tensor-grid">
+            ${TOY_DATA.words.map((w, i) => `
+              <div class="tensor-card">
+                <h4><span>Token ${i + 1}: <code>"${w}"</code></span> <span class="vec-pill">[${TOY_DATA.X[i][0].toFixed(1)}, ${TOY_DATA.X[i][1].toFixed(1)}]</span></h4>
+                <div style="font-size:0.84rem; color:var(--text-muted);">
+                  ${i === 0 ? 'Pure action concept along Dim 1.' : i === 1 ? 'Modifier bridging action (0.8) & scale (0.6).' : 'Temporal marker aligned with Dim 2.'}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else if (currentStage === 2) {
+        area.innerHTML = `
+          <h3 style="margin:0 0 0.4rem 0;">Stage 2: Project Embeddings into Queries ($Q$), Keys ($K$), and Values ($V$)</h3>
+          <p style="margin:0; color:var(--text-muted); font-size:0.93rem;">
+            We multiply $X$ by three learned $2 \times 2$ weight matrices ($W_Q, W_K, W_V$) so each word gets its own <strong>Query</strong> (what it seeks), <strong>Key</strong> (what it advertises), and <strong>Value</strong> (what semantic payload it carries):
+          </p>
+          <div class="tensor-grid">
+            ${TOY_DATA.words.map((w, i) => `
+              <div class="tensor-card">
+                <h4><span><code>"${w}"</code> Projections</span></h4>
+                <div style="display:flex; flex-direction:column; gap:0.45rem; font-size:0.86rem;">
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--color-q); font-weight:600;">🟦 Query $q_{${i+1}}$:</span>
+                    <span class="vec-pill q">[${TOY_DATA.Q[i][0].toFixed(1)}, ${TOY_DATA.Q[i][1].toFixed(1)}]</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--color-k); font-weight:600;">🟨 Key $k_{${i+1}}$:</span>
+                    <span class="vec-pill k">[${TOY_DATA.K[i][0].toFixed(1)}, ${TOY_DATA.K[i][1].toFixed(1)}]</span>
+                  </div>
+                  <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--color-v); font-weight:600;">🟩 Value $v_{${i+1}}$:</span>
+                    <span class="vec-pill v">[${TOY_DATA.V[i][0].toFixed(1)}, ${TOY_DATA.V[i][1].toFixed(1)}]</span>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      } else if (currentStage === 3) {
+        const [r, c] = selectedCell;
+        const qVec = TOY_DATA.Q[r];
+        const kVec = TOY_DATA.K[c];
+        const score = TOY_DATA.rawScores[r][c];
+        area.innerHTML = `
+          <h3 style="margin:0 0 0.4rem 0;">Stage 3: Raw Similarity Scores ($S = Q \cdot K^T$)</h3>
+          <p style="margin:0; color:var(--text-muted); font-size:0.93rem;">
+            Every word's Query takes a dot product with every word's Key. <strong>Click any cell in the $3 \times 3$ heatmap below</strong> to inspect the exact dot-product arithmetic!
+          </p>
+          <div class="sandbox-grid" style="margin-top:0.9rem;">
+            <div>
+              <table class="heatmap-table">
+                <thead>
+                  <tr>
+                    <th>Query ↓ / Key →</th>
+                    ${TOY_DATA.words.map(w => `<th>🟨 "${w}"</th>`).join('')}
+                  </tr>
+                </thead>
+                <tbody>
+                  ${TOY_DATA.words.map((wRow, rIdx) => `
+                    <tr>
+                      <th style="text-align:left; color:var(--color-q);">🟦 "${wRow}"</th>
+                      ${TOY_DATA.rawScores[rIdx].map((val, cIdx) => {
+                        const isSel = rIdx === r && cIdx === c;
+                        const alpha = 0.12 + val * 0.45;
+                        return `<td class="heatmap-cell ${isSel ? 'active-cell' : ''}"
+                                    style="background:rgba(56, 189, 248, ${alpha.toFixed(2)}); font-weight:700;"
+                                    onclick="selectHeatmapCell(${rIdx}, ${cIdx})">
+                                  ${val.toFixed(2)}
+                                </td>`;
+                      }).join('')}
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+            <div class="tensor-card" style="display:flex; flex-direction:column; justify-content:center;">
+              <div style="font-size:0.8rem; color:var(--color-q); font-weight:700; text-transform:uppercase;">
+                🔍 Selected Cell Calculation: Row ${r+1} ("${TOY_DATA.words[r]}") × Col ${c+1} ("${TOY_DATA.words[c]}")
+              </div>
+              <div style="margin-top:0.6rem; font-family:monospace; font-size:0.95rem; line-height:1.8;">
+                <div>🟦 $q_{\\text{${TOY_DATA.words[r]}}} = [${qVec[0].toFixed(1)},\\; ${qVec[1].toFixed(1)}]$</div>
+                <div>🟨 $k_{\\text{${TOY_DATA.words[c]}}} = [${kVec[0].toFixed(1)},\\; ${kVec[1].toFixed(1)}]$</div>
+                <div style="margin-top:0.4rem; padding:0.5rem; background:#0b0f19; border-radius:6px; border:1px solid var(--border-focus);">
+                  $q \\cdot k = (${qVec[0].toFixed(1)} \\times ${kVec[0].toFixed(1)}) + (${qVec[1].toFixed(1)} \\times ${kVec[1].toFixed(1)}) = \\mathbf{${score.toFixed(2)}}$
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      } else if (currentStage === 4) {
+        area.innerHTML = `
+          <h3 style="margin:0 0 0.4rem 0;">Stage 4: Scale by $\\div \\sqrt{d_k}$ &amp; Apply Row-Wise Softmax</h3>
+          <p style="margin:0; color:var(--text-muted); font-size:0.93rem;">
+            First we divide every raw score by $\\sqrt{d_k} = \\sqrt{2} \\approx 1.414$ so large dimensions don't push Softmax into flat regions with zero gradient. Then <strong>Softmax</strong> turns each row into percentages summing to <code>100%</code>:
+          </p>
+          <div style="overflow-x:auto; margin-top:0.85rem;">
+            <table class="heatmap-table">
+              <thead>
+                <tr>
+                  <th>Query Word</th>
+                  <th>Attends to "Dream"</th>
+                  <th>Attends to "big"</th>
+                  <th>Attends to "now"</th>
+                  <th>Row Sum</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${TOY_DATA.words.map((w, rIdx) => `
+                  <tr>
+                    <th style="text-align:left; color:var(--color-q);">🟦 "${w}"</th>
+                    ${TOY_DATA.weights[rIdx].map((wt, cIdx) => `
+                      <td style="background:rgba(52, 211, 153, ${(wt * 0.85).toFixed(2)});">
+                        <div style="font-weight:800; font-size:0.98rem;">${Math.round(wt * 100)}%</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">
+                          scaled: ${TOY_DATA.scaledScores[rIdx][cIdx].toFixed(2)}
+                        </div>
+                      </td>
+                    `).join('')}
+                    <td style="font-weight:700; color:var(--color-v);">100%</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      } else if (currentStage === 5) {
+        area.innerHTML = `
+          <h3 style="margin:0 0 0.4rem 0;">Stage 5: Weighted Sum of Values ($Z = \\text{Weights} \\times V$)</h3>
+          <p style="margin:0; color:var(--text-muted); font-size:0.93rem;">
+            Each token's final contextualized output vector $z_i$ is computed by blending all Value vectors ($v_{\\text{Dream}}=[2,0],\\; v_{\\text{big}}=[0,3],\\; v_{\\text{now}}=[1,1]$) according to its Softmax weights!
+          </p>
+          <div class="tensor-grid">
+            ${TOY_DATA.words.map((w, i) => {
+              const wt = TOY_DATA.weights[i];
+              const out = TOY_DATA.outputs[i];
+              return `
+                <div class="tensor-card" style="border-top:3px solid var(--color-v);">
+                  <h4>
+                    <span>Contextualized <code>"${w}"</code> ($z_{${i+1}}$)</span>
+                    <span class="vec-pill v">[${out[0].toFixed(2)}, ${out[1].toFixed(2)}]</span>
+                  </h4>
+                  <div style="font-family:monospace; font-size:0.8rem; color:var(--text-muted); line-height:1.6;">
+                    <div>= ${wt[0].toFixed(2)} · $v_{\\text{Dream}}$ <code>[2.0, 0.0]</code></div>
+                    <div>+ ${wt[1].toFixed(2)} · $v_{\\text{big}}$ <code>[0.0, 3.0]</code></div>
+                    <div>+ ${wt[2].toFixed(2)} · $v_{\\text{now}}$ <code>[1.0, 1.0]</code></div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        `;
+      }
+
+      if (window.renderMathInElement) {
+        renderMathInElement(area, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false }
+          ]
+        });
+      }
+    }
+
+    // =========================================================================
+    // WIDGET #2: LIVE QUERY-KEY-VALUE SANDBOX
+    // =========================================================================
+    let sandboxScaleMode = 'sqrt'; // 'sqrt' | 'none' | 'sharp'
+
+    function setScaleMode(mode) {
+      sandboxScaleMode = mode;
+      document.getElementById('scale-btn-sqrt').classList.toggle('active', mode === 'sqrt');
+      document.getElementById('scale-btn-none').classList.toggle('active', mode === 'none');
+      document.getElementById('scale-btn-sharp').classList.toggle('active', mode === 'sharp');
+      updateSandbox();
+    }
+
+    function updateSandbox() {
+      const q1 = parseFloat(document.getElementById('sl-q1').value);
+      const q2 = parseFloat(document.getElementById('sl-q2').value);
+      const ka1 = parseFloat(document.getElementById('sl-ka1').value);
+      const ka2 = parseFloat(document.getElementById('sl-ka2').value);
+      const kb1 = parseFloat(document.getElementById('sl-kb1').value);
+      const kb2 = parseFloat(document.getElementById('sl-kb2').value);
+
+      document.getElementById('lbl-q-vec').textContent = `[${q1.toFixed(1)}, ${q2.toFixed(1)}]`;
+      document.getElementById('lbl-ka-vec').textContent = `[${ka1.toFixed(1)}, ${ka2.toFixed(1)}]`;
+      document.getElementById('lbl-kb-vec').textContent = `[${kb1.toFixed(1)}, ${kb2.toFixed(1)}]`;
+
+      const rawA = q1 * ka1 + q2 * ka2;
+      const rawB = q1 * kb1 + q2 * kb2;
+
+      let factor = 1 / Math.sqrt(2);
+      let modeDesc = '÷ √2 (1.414)';
+      if (sandboxScaleMode === 'none') {
+        factor = 1.0;
+        modeDesc = '÷ 1.0 (Unscaled)';
+      } else if (sandboxScaleMode === 'sharp') {
+        factor = 5.0;
+        modeDesc = '× 5.0 (Simulating unscaled large d_k)';
+      }
+
+      const scaledA = rawA * factor;
+      const scaledB = rawB * factor;
+
+      const maxLogit = Math.max(scaledA, scaledB);
+      const expA = Math.exp(scaledA - maxLogit);
+      const expB = Math.exp(scaledB - maxLogit);
+      const alphaA = expA / (expA + expB);
+      const alphaB = expB / (expA + expB);
+
+      // Values: v_A = [2.0, 0.0], v_B = [0.0, 4.0]
+      const out1 = alphaA * 2.0 + alphaB * 0.0;
+      const out2 = alphaA * 0.0 + alphaB * 4.0;
+
+      const grad = alphaA * (1 - alphaA);
+
+      document.getElementById('sb-raw-scores').textContent =
+        `q · k_A = ${rawA.toFixed(2)}   |   q · k_B = ${rawB.toFixed(2)}`;
+      document.getElementById('sb-scaled-scores').textContent =
+        `[${scaledA.toFixed(2)}, ${scaledB.toFixed(2)}]  (${modeDesc})`;
+
+      const pctA = (alphaA * 100).toFixed(1);
+      const pctB = (alphaB * 100).toFixed(1);
+
+      const barA = document.getElementById('bar-alpha-a');
+      const barB = document.getElementById('bar-alpha-b');
+      barA.style.width = `${Math.max(6, alphaA * 100)}%`;
+      barA.textContent = `${pctA}%`;
+      barB.style.width = `${Math.max(6, alphaB * 100)}%`;
+      barB.textContent = `${pctB}%`;
+
+      document.getElementById('sb-final-output').textContent =
+        `z = ${alphaA.toFixed(2)}·[2.0, 0.0] + ${alphaB.toFixed(2)}·[0.0, 4.0] = [${out1.toFixed(2)}, ${out2.toFixed(2)}]`;
+
+      const gradEl = document.getElementById('sb-grad-note');
+      if (grad < 0.03) {
+        gradEl.innerHTML = `<span style="color:var(--color-danger); font-weight:700;">⚠️ Softmax Saturation Alert:</span> Local Softmax gradient $\\alpha_A(1-\\alpha_A) = ${grad.toFixed(4)}$ is near zero! Backpropagation slows to a crawl.`;
+      } else {
+        gradEl.innerHTML = `<span style="color:var(--color-v); font-weight:700;">✅ Healthy Gradient Flow:</span> Local Softmax slope $\\alpha_A(1-\\alpha_A) = ${grad.toFixed(3)}$ allows smooth learning.`;
+      }
+
+      if (window.renderMathInElement) {
+        renderMathInElement(gradEl, {
+          delimiters: [{ left: '$', right: '$', display: false }]
+        });
+      }
+    }
+
+    // =========================================================================
+    // INITIALIZE EVERYTHING ON LOAD
+    // =========================================================================
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.mermaid) {
+        mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+      }
+      if (window.renderMathInElement) {
+        renderMathInElement(document.body, {
+          delimiters: [
+            { left: '$$', right: '$$', display: true },
+            { left: '$', right: '$', display: false }
+          ]
+        });
+      }
+      renderSentenceExplorer();
+      setStage(1);
+      updateSandbox();
+    });
+  </script>
+</body>
+</html>
